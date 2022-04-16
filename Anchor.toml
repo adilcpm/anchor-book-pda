@@ -1,0 +1,14 @@
+[features]
+seeds = false
+[programs.localnet]
+anchor_book_pda = "BhfjKSiJtR7dUJU66DYX8QVFqQBaina5u1VcFnRzWLgK"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "devnet"
+wallet = "/home/adilcpm/.config/solana/new_devnet.jso"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
