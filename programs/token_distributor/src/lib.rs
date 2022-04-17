@@ -1,11 +1,11 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Burn, CloseAccount, Mint, MintTo, Token, TokenAccount, Transfer};
+use anchor_spl::token::{ self, Mint, MintTo, Token, TokenAccount};
 
 
-declare_id!("BhfjKSiJtR7dUJU66DYX8QVFqQBaina5u1VcFnRzWLgK");
+declare_id!("ASTi2qK1PbondXrJxSjzmhLSvycW2Wo35Xf3YJRs1Hqe");
 
 #[program]
-pub mod anchor_book_pda {
+pub mod token_distributor {
 
     use super::*;
 

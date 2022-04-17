@@ -1,31 +1,29 @@
 import * as anchor from "@project-serum/anchor";
-import { Program, splitArgsAndCtx } from "@project-serum/anchor";
-import { AnchorBookPda } from "../target/types/anchor_book_pda";
+import { Program } from "@project-serum/anchor";
+import { TokenDistributor } from "../target/types/token_distributor";
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
-  getOrCreateAssociatedTokenAccount,
-  getAccount
+  getOrCreateAssociatedTokenAccount
 } from "@solana/spl-token";
 import { expect } from 'chai';
 
-describe("anchor-book-pda", () => {
+describe("token_distributor", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
-  const programId = new anchor.web3.PublicKey('BhfjKSiJtR7dUJU66DYX8QVFqQBaina5u1VcFnRzWLgK');
-  const idl = JSON.parse(require('fs').readFileSync('./target/idl/anchor_book_pda.json', 'utf8'));
-  const program = new anchor.Program(idl, programId) as Program<AnchorBookPda>;
-  const distributorName = "Anchor Book";
+  const programId = new anchor.web3.PublicKey('ASTi2qK1PbondXrJxSjzmhLSvycW2Wo35Xf3YJRs1Hqe');
+  const idl = JSON.parse(require('fs').readFileSync('./target/idl/token_distributor.json', 'utf8'));
+  const program = new anchor.Program(idl, programId) as Program<TokenDistributor>;
+  const distributorName = "Token Distr";
 
   let distributorAccountPda: anchor.web3.PublicKey;
   let tokenMint: anchor.web3.PublicKey;
   let distributorAccountBump: number, tokenMintBump: number;
 
   it("Initializes the Distributor", async () => {
-    let bumps = new PoolBumps();
+    let bumps = new DistributorBumps();
 
-    function PoolBumps() {
+    function DistributorBumps() {
       this.distributorAccount;
       this.tokenMint;
     }
@@ -45,9 +43,11 @@ describe("anchor-book-pda", () => {
     bumps.tokenMint = tokenMintBump;
 
     try {
+      //Check if Distributor Account is already initialized
       await program.account.distributorAccount.fetch(distributorAccountPda);
     }
     catch (e) {
+      //Else Initialize Distributor
       await program.methods
         .initializeDistributor(distributorName, bumps)
         .accounts({
@@ -70,10 +70,13 @@ describe("anchor-book-pda", () => {
   it("Get Tokens from Distributor", async () => {
     let amount = new anchor.BN(100)
 
+    // Find associated token account of User for the Mint, if not found, create it
+    // @ts-ignore
     let userTokenAccount = await getOrCreateAssociatedTokenAccount(provider.connection, provider.wallet.payer, tokenMint, provider.wallet.publicKey);
     let beforeAmountUser = Number(userTokenAccount.amount);
     let distributorAccount = await program.account.distributorAccount.fetch(distributorAccountPda);
     let beforeSupplyAmount = distributorAccount.tokenSupply;
+    // Distribute 100 tokens to User Token Account
     await program.methods
       .getToken(amount)
       .accounts({
@@ -85,6 +88,7 @@ describe("anchor-book-pda", () => {
       })
       .rpc();
 
+    // @ts-ignore
     userTokenAccount = await getOrCreateAssociatedTokenAccount(provider.connection, provider.wallet.payer, tokenMint, provider.wallet.publicKey);
     let afterAmountUser = Number(userTokenAccount.amount);
     distributorAccount = await program.account.distributorAccount.fetch(distributorAccountPda);
